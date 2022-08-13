@@ -2,22 +2,32 @@ DROP DATABASE IF EXISTS election;
 CREATE DATABASE election;
 USE election;
 
-CREATE TABLE department (
-    id INTEGER AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(30)
-);
+INSERT INTO employee (first_name, last_name, role_id, mananger_id)
+VALUES
+    ('Sam', 'Fields'),
+    ('Katie', 'Holmes'),
+    ('Sierra', 'Tiffany'),
+    ('Keith', 'Nap'),
+    ('Joe', 'Renalds'),
+    ('Vivienne', 'West'),
+    ('Cherry', 'Masterson'),
+    ('Minnie', 'Gold');
 
-CREATE TABLE role (
-    id INTEGER AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(30),
-    salary DECIMAL,
-    department_id INTEGER
-);
+INSERT INTO role (title, salary, department_id)
+VALUES
+    ('Sales Lead', '100000'),
+    ('Salespeson', '80000'),
+    ('Lead Engineer', '150000'),
+    ('Software Engineer', '120000'),
+    ('Account Manager', '160000'),
+    ('Accountant', '150000'),
+    ('Legal Team Lead', '250000'),
+    ('Lawyer', '190000');
 
-CREATE TABLE employee (
-    id INTEGER AUTO_INCREMENT PRIMARY KEY,
-    first_name VARCHAR(30),
-    last_name VARCHAR(30),
-    role_id INTEGER,
-    manager_id INTEGER
-);
+INSERT INTO department (name)
+VALUES
+    ('Engineering'),
+    ('Finance'),
+    ('Legal'),
+    ('Sales');
+    
