@@ -1,42 +1,58 @@
 const cTable = require('console.table');
 const inquirer = require('inquirer');
 const connection = require('./config/mysql');
-const addemployee = () => {
+const addemployee = async () => {
     inquirer.prompt([
         {
             type: 'input',
-            name: 'name',
+            name: 'first_name',
             message: 'What is the employees first name?'
         },
         {
             type: 'input',
-            name: 'name',
+            name: 'last_name',
             message: 'What is the employees last name?'
+        },
+        {
+            type: 'list',
+            name: 'role',
+            message: 'Whats the employees role?',
+            choices: getRoles()
         }
     ])
-    .then ((answers) => {
-        connection.query(`insert into employee (first_name) values ("${answers.first_name}")`, (err) => {
-            if(err) {
-                console.error(err);
-            }
-            getinitialquestions();
+    .then((a) => {
+        console.log(a);
+        const query = `INSERT INTO employee (first_name, last_name) VALUES (?, ?)`
+
+        connection.query(query, [a.first_name, a.last_name], (req, res) => {
+            console.log('added new employee')
         })
+        getinitialquestions();
+    
     })
-    .then ((answers) => {
-        connection.query(`insert into employee (last_name) values ("${answers.last_name}")`, (err) => {
-            if(err) {
-                console.error(err);
-            }
-            getinitialquestions();
-        })
-    })
+}
+const getRoles = () => {
+    const query = `SELECT title FROM role`
+    const name = connection.query(query)
+    return name.map(name => name.title);
+    console.log(name)
 }
 const addrole = () => {
     inquirer.prompt([
         {
             type: 'input',
-            name: 'name',
+            name: 'title',
             message: 'Enter a Role'
+        },
+        {
+            type: 'input',
+            name: 'salary',
+            message: 'What is their salary?'
+        },
+        {
+            type: 'input',
+            name: 'salary',
+            message: 'What is their salary?'
         }
     ])
     .then ((answers) => {
