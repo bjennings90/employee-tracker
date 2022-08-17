@@ -6,6 +6,6 @@ const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   database: 'election'
-}).promise();
+});
 
 module.exports = connection;

@@ -1,7 +1,10 @@
 const cTable = require('console.table');
 const inquirer = require('inquirer');
 const connection = require('./config/mysql');
-const addemployee = async () => {
+const addemployee = () => {
+    getRoles((roles) => {
+    getEmployees((managers) => {
+    
     inquirer.prompt([
         {
             type: 'input',
@@ -17,27 +20,55 @@ const addemployee = async () => {
             type: 'list',
             name: 'role',
             message: 'Whats the employees role?',
-            choices: getRoles()
+            choices: roles
+        },
+        {
+            type: 'list',
+            name: 'manager',
+            message: 'What is the manager id?',
+            choices: managers
         }
     ])
     .then((a) => {
         console.log(a);
-        const query = `INSERT INTO employee (first_name, last_name) VALUES (?, ?)`
+        const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`
 
-        connection.query(query, [a.first_name, a.last_name], (req, res) => {
+        connection.query(query, [a.first_name, a.last_name, a.role, a.manager], (req, res) => {
             console.log('added new employee')
+            getinitialquestions();
         })
-        getinitialquestions();
     
     })
+})
+})
 }
-const getRoles = () => {
-    const query = `SELECT title FROM role`
-    const name = connection.query(query)
-    return name.map(name => name.title);
-    console.log(name)
+const getEmployees = (cb) => {
+    const query = `SELECT id AS value, first_name, last_name FROM employee`
+    connection.query(query, (err, data) => {
+                if (err) throw err;
+
+    const managers = data.map(({ first_name, last_name, value }) => ({ name: `${first_name} ${last_name}`, value }));
+     cb(managers)
+    })
+}
+const getDepartment = (cb) => {
+    const query = `SELECT id AS value, name FROM department`
+    connection.query(query, (err, data) => {
+                if (err) throw err;
+     cb(data)
+    })
+}
+const getRoles = (cb) => {
+    const query = `SELECT role.id, role.title FROM role`
+    connection.query(query, (err, data) => {
+                if (err) throw err;
+
+    const roles = data.map(({ id, title }) => ({ name: title, value: id }));
+     cb(roles)
+    })
 }
 const addrole = () => {
+    getDepartment(department => {
     inquirer.prompt([
         {
             type: 'input',
@@ -50,19 +81,21 @@ const addrole = () => {
             message: 'What is their salary?'
         },
         {
-            type: 'input',
-            name: 'salary',
-            message: 'What is their salary?'
+            type: 'list',
+            name: 'department',
+            message: 'What is their department?',
+            choices: department
         }
     ])
     .then ((answers) => {
-        connection.query(`insert into role (title) values ("${answers.title}")`, (err) => {
+        connection.query(`insert into role (title, salary, department_id) values ("${answers.title}", "${answers.salary}", ${answers.department})`, (err) => {
             if(err) {
                 console.error(err);
             }
             getinitialquestions();
         })
     })
+})
 }
 const adddepartment = () => {
     inquirer.prompt([
@@ -81,6 +114,34 @@ const adddepartment = () => {
         })
     })
 }
+const updateEmployeeRole = () => {
+    getRoles((roles) => {
+        getEmployees((employees) => {
+    inquirer.prompt([
+        {
+            type: 'list',
+            name: 'employee',
+            message: 'Select an Employee',
+            choices: employees
+        },
+        {
+            type: 'list',
+            name: 'role',
+            message: 'Select a Role',
+            choices: roles
+        }
+    ])
+    .then ((answers) => {
+        connection.query(`update employee set role_id = ? WHERE id = ?`, [answers.role, answers.employee], (err) => {
+            if(err) {
+                console.error(err);
+            }
+            getinitialquestions();
+        })
+    })
+})
+})
+}
 const getinitialquestions = () => inquirer
     .prompt([
         /* Pass your questions in here */
@@ -88,7 +149,7 @@ const getinitialquestions = () => inquirer
             type: "list",
             name: "choice",
             message: "What would you like to do?",
-            choices: ["View All Employees", "Add Employee", "Update Employee Role", "View All Roles","Add Role", "View All Departments", "Add Department" ]
+            choices: ["View All Employees", "Add Employee", "Update Employee Role", "View All Roles","Add Role", "View All Departments", "Add Department", "Quit"]
         }
     ])
     .then((answers) => {
@@ -104,14 +165,7 @@ const getinitialquestions = () => inquirer
         } else if (answers.choice === "Add Employee") {
             addemployee();
         } else if (answers.choice === "Update Employee Role") {
-            connection.query("select * from role", (err, roles) => {
-                if (!err) {
-                    console.log(cTable.getTable(roles))
-                } else {
-                    console.error(err)
-                }
-                getinitialquestions()
-            })
+            updateEmployeeRole();
         } else if (answers.choice === "View All Roles") {
             connection.query("select * from role", (err, roles) => {
                 if (!err) {
@@ -135,6 +189,7 @@ const getinitialquestions = () => inquirer
         } else if (answers.choice === "Add Department") {
             adddepartment();
         }
+        process.exit(0);
         // Use user feedback for... whatever!!
     })
     .catch((error) => {
